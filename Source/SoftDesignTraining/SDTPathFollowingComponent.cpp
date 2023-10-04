@@ -8,23 +8,23 @@
 
 #include "DrawDebugHelpers.h"
 
-USDTPathFollowingComponent::USDTPathFollowingComponent(const FObjectInitializer& ObjectInitializer)
+USDTPathFollowingComponent::USDTPathFollowingComponent(const FObjectInitializer &ObjectInitializer)
 {
-
 }
 
 void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 {
-    const TArray<FNavPathPoint>& points = Path->GetPathPoints();
-    const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
+    const TArray<FNavPathPoint> &points = Path->GetPathPoints();
+    const FNavPathPoint &segmentStart = points[MoveSegmentStartIndex];
 
     if (SDTUtils::HasJumpFlag(segmentStart))
     {
-        //update jump
+        // update jump
     }
     else
     {
-        //update navigation along path
+        // update navigation along path
+        Super::FollowPathSegment(DeltaTime);
     }
 }
 
@@ -32,17 +32,16 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
 {
     Super::SetMoveSegment(segmentStartIndex);
 
-    const TArray<FNavPathPoint>& points = Path->GetPathPoints();
+    const TArray<FNavPathPoint> &points = Path->GetPathPoints();
 
-    const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
+    const FNavPathPoint &segmentStart = points[MoveSegmentStartIndex];
 
     if (SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
-        //Handle starting jump
+        // Handle starting jump
     }
     else
     {
-        //Handle normal segments
+        // Handle normal segments
     }
 }
-

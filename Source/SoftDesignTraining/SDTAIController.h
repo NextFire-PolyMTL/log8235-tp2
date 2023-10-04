@@ -7,7 +7,7 @@
 #include "SDTAIController.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS(ClassGroup = AI, config = Game)
 class SOFTDESIGNTRAINING_API ASDTAIController : public ASDTBaseAIController
@@ -52,6 +52,12 @@ protected:
     void OnMoveToTarget();
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     void UpdatePlayerInteraction(float deltaTime);
+
+    FVector TargetLocation;
+    bool TargetLocationIsRandom;
+    UNavigationPath *CurrentPath;
+
+    void SetBehavior(float deltaTime, FHitResult detectionHit);
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;
