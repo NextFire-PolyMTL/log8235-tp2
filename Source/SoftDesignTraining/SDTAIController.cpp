@@ -118,6 +118,17 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult> 
             }
         }
     }
+    if (true) {
+        for (TActorIterator<ASDTCollectible> collectible(GetWorld()); collectible; ++collectible)
+        {
+            auto hit = FHitResult(GetPawn()->GetActorLocation(), collectible->GetActorLocation());
+            if (!collectible->IsOnCooldown() && hit.Distance < dist)
+            {
+                outDetectionHit = hit;
+                dist = hit.Distance;
+            }
+        }
+    }
 }
 
 void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
