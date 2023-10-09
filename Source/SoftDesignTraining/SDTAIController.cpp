@@ -118,17 +118,6 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult> 
             }
         }
     }
-    if (true) {
-        for (TActorIterator<ASDTCollectible> collectible(GetWorld()); collectible; ++collectible)
-        {
-            auto hit = FHitResult(GetPawn()->GetActorLocation(), collectible->GetActorLocation());
-            if (!collectible->IsOnCooldown() && hit.Distance < dist)
-            {
-                outDetectionHit = hit;
-                dist = hit.Distance;
-            }
-        }
-    }
 }
 
 void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
@@ -138,6 +127,19 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
     {
         TargetLocation = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), GetPawn()->GetActorLocation(), 1000.f);
         TargetLocationIsRandom = true;
+
+        auto min_dist = INFINITY;
+
+        for (TActorIterator<ASDTCollectible> collectible(GetWorld()); collectible; ++collectible)
+        {
+           // GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.0, FColor::Red, FString("go to collectible outside sphere"));
+            auto dist = FVector::Dist(GetPawn()->GetActorLocation(), collectible->GetActorLocation());
+            if (!collectible->IsOnCooldown() && dist < min_dist)
+            {
+                TargetLocation = collectible->GetActorLocation();
+                min_dist = dist;
+            }
+        }
     }
     else if (component != nullptr && (m_ReachedTarget || TargetLocationIsRandom || component->GetCollisionObjectType() == COLLISION_PLAYER))
     {
