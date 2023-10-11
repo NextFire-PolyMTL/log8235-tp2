@@ -55,6 +55,7 @@ protected:
 
     FVector TargetLocation;
     bool TargetLocationIsRandom;
+    UPROPERTY()
     UNavigationPath *CurrentPath;
 
     void SetBehavior(float deltaTime, FHitResult detectionHit);

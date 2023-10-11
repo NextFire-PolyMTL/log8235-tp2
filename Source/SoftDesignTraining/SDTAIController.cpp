@@ -41,17 +41,22 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
 void ASDTAIController::ShowNavigationPath()
 {
     // Show current navigation path DrawDebugLine and DrawDebugSphere
-    if (CurrentPath == nullptr)
+    if(CurrentPath == nullptr)
     {
         return;
     }
-    auto points = CurrentPath->PathPoints;
-    for (size_t i = 0; i < points.Num() - 1; i++)
-    {
-        DrawDebugLine(GetWorld(), points[i], points[i + 1], FColor::Green, false, 0.1f, 0, 5.f);
+    else{
+
+        TArray<FVector> points = CurrentPath->PathPoints;
+       
+        for (size_t i = 0; i < points.Num() - 1; i++)
+        {
+            DrawDebugLine(GetWorld(), points[i], points[i + 1], FColor::Green, false, 0.1f, 0, 5.f);
+        }
+        
+        auto color = TargetLocationIsRandom ? FColor::Blue : FColor::Red;
+        DrawDebugSphere(GetWorld(), TargetLocation, 50.f, 10, color, false, 0.1f, 0, 5.f);
     }
-    auto color = TargetLocationIsRandom ? FColor::Blue : FColor::Red;
-    DrawDebugSphere(GetWorld(), TargetLocation, 50.f, 10, color, false, 0.1f, 0, 5.f);
 }
 
 void ASDTAIController::ChooseBehavior(float deltaTime)
