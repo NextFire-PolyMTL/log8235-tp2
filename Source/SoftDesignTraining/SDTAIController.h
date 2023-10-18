@@ -44,6 +44,8 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool Landing = false;
 
+    bool followPlayer = false;
+
 public:
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void AIStateInterrupted();
@@ -53,10 +55,7 @@ protected:
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
     void UpdatePlayerInteraction(float deltaTime);
 
-    FVector TargetLocation;
-    bool TargetLocationIsRandom;
-    UPROPERTY()
-    UNavigationPath *CurrentPath;
+    AActor* TargetActor;
 
     void SetBehavior(float deltaTime, FHitResult detectionHit);
 

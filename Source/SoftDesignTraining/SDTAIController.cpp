@@ -20,10 +20,9 @@ ASDTAIController::ASDTAIController(const FObjectInitializer &ObjectInitializer)
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
     // Move to target depending on current behavior
-    CurrentPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), GetPawn()->GetActorLocation(), TargetLocation);
     ShowNavigationPath();
     OnMoveToTarget();
-    MoveToLocation(TargetLocation);
+    MoveToActor(TargetActor);
 }
 
 void ASDTAIController::OnMoveToTarget()
@@ -40,22 +39,23 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
 
 void ASDTAIController::ShowNavigationPath()
 {
+    auto currentPath = GetPathFollowingComponent()->GetPath();
     // Show current navigation path DrawDebugLine and DrawDebugSphere
-    if(CurrentPath == nullptr)
+    if(currentPath == nullptr)
     {
         return;
     }
     else{
 
-        TArray<FVector> points = CurrentPath->PathPoints;
+       auto points = currentPath->GetPathPoints();
        
         for (size_t i = 0; i < points.Num() - 1; i++)
         {
             DrawDebugLine(GetWorld(), points[i], points[i + 1], FColor::Green, false, 0.1f, 0, 5.f);
         }
         
-        auto color = TargetLocationIsRandom ? FColor::Blue : FColor::Red;
-        DrawDebugSphere(GetWorld(), TargetLocation, 50.f, 10, color, false, 0.1f, 0, 5.f);
+        auto color = FColor::Red;
+        DrawDebugSphere(GetWorld(), TargetActor->GetActorLocation(), 50.f, 10, color, false, 0.1f, 0, 5.f);
     }
 }
 
@@ -130,9 +130,6 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
     auto component = detectionHit.GetComponent();
     if (component == nullptr && m_ReachedTarget)
     {
-        TargetLocation = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), GetPawn()->GetActorLocation(), 1000.f);
-        TargetLocationIsRandom = true;
-
         auto min_dist = INFINITY;
 
         for (TActorIterator<ASDTCollectible> collectible(GetWorld()); collectible; ++collectible)
@@ -141,15 +138,18 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
             auto dist = FVector::Dist(GetPawn()->GetActorLocation(), collectible->GetActorLocation());
             if (!collectible->IsOnCooldown() && dist < min_dist)
             {
-                TargetLocation = collectible->GetActorLocation();
+                TargetActor = *collectible;
                 min_dist = dist;
             }
         }
+        followPlayer = false;
     }
-    else if (component != nullptr && (m_ReachedTarget || TargetLocationIsRandom || component->GetCollisionObjectType() == COLLISION_PLAYER))
+    else if (component != nullptr && (m_ReachedTarget || component->GetCollisionObjectType() == COLLISION_PLAYER))
     {
-        TargetLocation = detectionHit.GetActor()->GetActorLocation();
-        TargetLocationIsRandom = false;
+        TargetActor = detectionHit.GetActor();
+        //followPlayer = false;
+        //m_ReachedTarget = true; //We consider that the IA reached
+
     }
 }
 
