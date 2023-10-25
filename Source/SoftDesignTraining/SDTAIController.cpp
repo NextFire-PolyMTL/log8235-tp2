@@ -22,7 +22,14 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     // Move to target depending on current behavior
     ShowNavigationPath();
     OnMoveToTarget();
-    MoveToActor(TargetActor);
+    if (Cast<const INavAgentInterface>(TargetActor) != nullptr)
+    {
+        MoveToActor(TargetActor);
+    }
+    else
+    {
+        MoveToLocation(TargetActor->GetActorLocation());
+    }
 }
 
 void ASDTAIController::OnMoveToTarget()
