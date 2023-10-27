@@ -17,4 +17,10 @@ class SOFTDESIGNTRAINING_API USDTPathFollowingComponent : public UPathFollowingC
 public:
     virtual void FollowPathSegment(float deltaTime) override;
     virtual void SetMoveSegment(int32 segmentStartIndex) override;
+
+private:
+    float TimeOnCurve = 0.0f;
+    double MinTimeCurve = 0.0;
+    double MaxTimeCurve = 0.0;
+    FVector2D JumpVector2D = FVector2D::ZeroVector;
 };
