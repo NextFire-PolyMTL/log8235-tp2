@@ -22,6 +22,8 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     // Move to target depending on current behavior
     ShowNavigationPath();
     OnMoveToTarget();
+    MoveToLocation(TargetActor->GetActorLocation());
+    /*
     if (Cast<const INavAgentInterface>(TargetActor) != nullptr)
     {
         MoveToActor(TargetActor);
@@ -30,6 +32,7 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     {
         MoveToLocation(TargetActor->GetActorLocation());
     }
+    */
 }
 
 void ASDTAIController::OnMoveToTarget()
@@ -91,7 +94,6 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     TArray<TEnumAsByte<EObjectTypeQuery>> detectionTraceObjectTypes;
     detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_COLLECTIBLE));
     detectionTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_PLAYER));
-
     TArray<FHitResult> allDetectionHits;
     GetWorld()->SweepMultiByObjectType(allDetectionHits, detectionStartLocation, detectionEndLocation, FQuat::Identity, detectionTraceObjectTypes, FCollisionShape::MakeSphere(m_DetectionCapsuleRadius));
 
@@ -111,6 +113,12 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult> 
     {
         if (UPrimitiveComponent *component = hit.GetComponent())
         {
+            APawn* selfPawn = GetPawn();
+            if (!selfPawn)
+                return;
+            //We make sure the agent cannot see the target trough walls.
+            if (SDTUtils::Raycast(GetWorld(), selfPawn->GetActorLocation(), hit.GetActor()->GetActorLocation()))
+                break;
             if (component->GetCollisionObjectType() == COLLISION_PLAYER)
             {
                 // we can't get more important than the player
@@ -151,6 +159,25 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
         }
         followPlayer = false;
     }
+    
+    else if (component != nullptr && component->GetCollisionObjectType() == COLLISION_PLAYER) {
+        if (!followPlayer) {
+            TargetActor = detectionHit.GetActor();
+            AIStateInterrupted(); //We consider that the IA reached is previous objectives
+            followPlayer = true;
+        }
+    }
+    else if (component != nullptr && m_ReachedTarget)
+    {
+        TargetActor = detectionHit.GetActor();
+        followPlayer = false;
+
+    }
+    else {
+        followPlayer = false;
+    }
+    
+    /*
     else if (component != nullptr && (m_ReachedTarget || component->GetCollisionObjectType() == COLLISION_PLAYER))
     {
         TargetActor = detectionHit.GetActor();
@@ -158,6 +185,8 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
         //m_ReachedTarget = true; //We consider that the IA reached
 
     }
+    */
+    
 }
 
 void ASDTAIController::AIStateInterrupted()
