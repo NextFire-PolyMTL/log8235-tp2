@@ -10,6 +10,10 @@ class ASoftDesignTrainingCharacter : public ACharacter
     GENERATED_BODY()
 
 public:
+    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = AI)
+    TArray<TObjectPtr<AActor>> FleeLocations;
+
+public:
     ASoftDesignTrainingCharacter();
 
     virtual void BeginPlay() override;
