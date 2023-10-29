@@ -11,6 +11,7 @@
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 #include "NavigationSystem.h"
+#include "Algo/MaxElement.h"
 #include "SoftDesignTrainingMainCharacter.h"
 
 ASDTAIController::ASDTAIController(const FObjectInitializer &ObjectInitializer)
@@ -23,17 +24,17 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     // Move to target depending on current behavior
     ShowNavigationPath();
     OnMoveToTarget();
-    
+
     if (Cast<const INavAgentInterface>(TargetActor) != nullptr && canSeePlayer) //We update the path only when we see the player
     {
         MoveToActor(TargetActor,-1.0F,false);// Directly update the path when the actor move.
     }
-    else if (Cast<const INavAgentInterface>(TargetActor) != nullptr && followPlayer)
+    else if (Cast<const INavAgentInterface>(TargetActor) != nullptr && PlayerBehaviorChoice == PlayerBehavior::CHASE)
     {
         MoveToLocation(lastPlayerPosition);
-        followPlayer = false;
+        PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
     }
-    else
+    else if (TargetActor != nullptr)
     {
         MoveToLocation(TargetActor->GetActorLocation());
     }
@@ -48,7 +49,7 @@ void ASDTAIController::OnMoveToTarget()
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult &Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
-    if (followPlayer) {
+    if (PlayerBehaviorChoice == PlayerBehavior::CHASE) {
         canSeePlayer = false;
         //We cannot set followPlayer to false now because otherwise the agent will go to the starting point of the player if he eliminate him
     }
@@ -165,52 +166,78 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
                 min_dist = dist;
             }
         }
-        followPlayer = false;
+        PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
         canSeePlayer = false;
     }
-    
+
     else if (component != nullptr && component->GetCollisionObjectType() == COLLISION_PLAYER) {
-        if (!followPlayer) {
-            TargetActor = detectionHit.GetActor();
+        auto playerPoweredUp = SDTUtils::IsPlayerPoweredUp(GetWorld());
+        if (PlayerBehaviorChoice == PlayerBehavior::NO_PLAYER) {
+            TargetActor = playerPoweredUp ? ChooseFleePoint(detectionHit.GetActor()->GetActorLocation()) : detectionHit.GetActor();
             AIStateInterrupted(); //We consider that the IA reached is previous objectives
-            followPlayer = true;
+            PlayerBehaviorChoice = playerPoweredUp ? PlayerBehavior::FLEE : PlayerBehavior::CHASE;
             canSeePlayer = true;
         }
-        lastPlayerPosition = TargetActor->GetActorLocation();
+        else if (PlayerBehaviorChoice == PlayerBehavior::CHASE && playerPoweredUp)
+        {
+            TargetActor = ChooseFleePoint(detectionHit.GetActor()->GetActorLocation());
+            AIStateInterrupted();
+            PlayerBehaviorChoice = PlayerBehavior::FLEE;
+        }
+        else if (PlayerBehaviorChoice == PlayerBehavior::FLEE && !playerPoweredUp)
+        {
+            TargetActor = detectionHit.GetActor();
+            AIStateInterrupted();
+            PlayerBehaviorChoice = PlayerBehavior::CHASE;
+            canSeePlayer = true;
+        }
+
+        lastPlayerPosition = TargetActor != nullptr ? TargetActor->GetActorLocation() : FVector::ZeroVector;
     }
     else if (component != nullptr && m_ReachedTarget)
     {
         TargetActor = detectionHit.GetActor();
-        followPlayer = false;
+        PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
         canSeePlayer = false;
-
     }
-    else {
-        if (followPlayer) { 
-           // The player cannot be seen so we just stop the current path which is update to follow a path to the last position where the player was seen.
-           AIStateInterrupted();
-           canSeePlayer = false;
+    else
+    {
+        if (PlayerBehaviorChoice == PlayerBehavior::CHASE) {
+            // The player cannot be seen so we just stop the current path which is update to follow a path to the last position where the player was seen.
+            AIStateInterrupted();
+            canSeePlayer = false;
         }
         else {
-            followPlayer = false;
+            PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
             canSeePlayer = false;
         }
     }
-    
-    /*
-    else if (component != nullptr && (m_ReachedTarget || component->GetCollisionObjectType() == COLLISION_PLAYER))
-    {
-        TargetActor = detectionHit.GetActor();
-        //followPlayer = false;
-        //m_ReachedTarget = true; //We consider that the IA reached
-
-    }
-    */
-    
 }
 
 void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
     m_ReachedTarget = true;
+}
+
+AActor *ASDTAIController::ChooseFleePoint(FVector playerPosition) const
+{
+    // Retrieve the actors for the positions to consider to go away from the player position.
+    auto owningAICharacter = Cast<ASoftDesignTrainingCharacter>(GetCharacter());
+    auto &fleePoints = owningAICharacter->FleeLocations;
+    if (owningAICharacter == nullptr || fleePoints.IsEmpty()) {
+        return nullptr;
+    }
+
+    // Using the position of the AI and the player, define a plane, then define a perpendicular plane from the first plane.
+    // A point is more interesting if it is far from the first plane in the direction of the normal, but a point also becomes interesting if
+    // if is far from the second plane on any side.
+    auto AIPosition = owningAICharacter->GetActorLocation();
+    auto planeNormal = FVector(AIPosition.X - playerPosition.X, AIPosition.Y - playerPosition.Y, 0).GetSafeNormal();
+    FPlane playerPlane(playerPosition, planeNormal);
+    FPlane playerParallelPlane(playerPosition, planeNormal.Cross(FVector::UpVector));
+    return Algo::MaxElementBy(fleePoints, [&](auto element) {
+        // The multiplication by 2 is a weight to prefer a point that is far from the first plane at first.
+        return 2 * playerPlane.PlaneDot(element->GetActorLocation()) + FMath::Abs(playerParallelPlane.PlaneDot(element->GetActorLocation()));
+    })->Get();
 }
