@@ -25,11 +25,30 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         {
             return;
         }
-        TimeOnCurve += DeltaTime / owner->JumpSpeed;
-        auto heightOnCurve = owner->JumpCurve->GetFloatValue(TimeOnCurve) * owner->JumpApexHeight;
-        auto newLocation = segmentStart.Location + FVector(JumpVector2D * (TimeOnCurve - MinTimeCurve) / (MaxTimeCurve - MinTimeCurve), heightOnCurve);
-        owner->GetCharacter()->SetActorLocation(newLocation + owner->GetCharacter()->GetActorLocation() - owner->GetCharacter()->GetCharacterMovement()->GetActorFeetLocation());
 
+        FVector newLocation;
+        TimeOnCurve += DeltaTime * owner->JumpSpeed;
+        if (TimeOnCurve >= MaxTimeCurve)
+        {
+            // Do not set the end position too far away from the segment end point in the case there is a gap in the DeltaTime.
+            // The TickComponent method calls UpdatePathSegment first followed by FollowPathSegment. It is on the next tick after this one
+            // that the transition to the next segment will occur.
+            if (TimeOnCurve >= MaxTimeCurve + 0.2f)
+            {
+                TimeOnCurve = MaxTimeCurve + 0.2f;
+            }
+            // This assumes that the starting and ending point are at the same Z coordinate.
+            newLocation = segmentStart.Location + FVector(JumpVector2D * (TimeOnCurve - MinTimeCurve) / (MaxTimeCurve - MinTimeCurve), owner->GetCharacter()->GetSimpleCollisionHalfHeight());
+        }
+        else
+        {
+            // For the position in X,Y, Do a linear scaling of the JumpVector2D vector. For the position in Z, use the jump curve with the time elapsed.
+            auto heightOnCurve = owner->JumpCurve->GetFloatValue(TimeOnCurve) * owner->JumpApexHeight;
+            newLocation = segmentStart.Location + FVector(JumpVector2D * (TimeOnCurve - MinTimeCurve) / (MaxTimeCurve - MinTimeCurve), heightOnCurve + owner->GetCharacter()->GetSimpleCollisionHalfHeight());
+        }
+        owner->GetCharacter()->SetActorLocation(newLocation);
+
+        DrawDebugPoint(GetWorld(), newLocation, 3.0f, FColor::Magenta, false, 3.0f);
         DrawDebugDirectionalArrow(GetWorld(), segmentStart.Location, newLocation, 3.0f, FColor::Cyan, false, -1.0f, 0U, 2.0f);
     }
     else
@@ -63,22 +82,27 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.0f, FColor::Blue, FString("Is Nav Link"));
     }
 
-
     if (SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
         // Handle starting jump
         owner->AtJumpSegment = true;
+
+        // The X axis of the curve is the time elapsed. The Y axis of the curve is the height of the jump.
+        // Retrieve the start and end time of the jump curve.
         owner->JumpCurve->GetTimeRange(MinTimeCurve, MaxTimeCurve);
+        // Configure the time elapsed on the curve to start at the first time of the curve.
         TimeOnCurve = MinTimeCurve;
+        // Since all the start and end points are at the same level, assume that the movement in the X,Y plane is linear during the jump.
+        // To determine the position, we will just scale this vector according to the time that passed.
         JumpVector2D = FVector2D(segmentEnd.Location) - FVector2D(segmentStart.Location);
 
-        GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.0f, FColor::Magenta, FString("Is Jumping true"));
+        DrawDebugPoint(GetWorld(), segmentStart, 10.0f, FColor::Magenta, false, 3.0f);
     }
     else
     {
         // Handle normal segments
         owner->AtJumpSegment = false;
 
-        GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.0f, FColor::Purple, FString("No Jump Flag"));
+        DrawDebugPoint(GetWorld(), segmentStart, 10.0f, FColor::Green, false, 3.0f);
     }
 }
