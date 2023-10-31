@@ -64,17 +64,12 @@ void ASDTAIController::ShowNavigationPath()
     {
         return;
     }
-    else{
 
-       auto points = currentPath->GetPathPoints();
+    auto points = currentPath->GetPathPoints();
        
-        for (size_t i = 0; i < points.Num() - 1; i++)
-        {
-            DrawDebugLine(GetWorld(), points[i], points[i + 1], FColor::Green, false, 0.1f, 0, 5.f);
-        }
-        
-        auto color = FColor::Red;
-        DrawDebugSphere(GetWorld(), TargetActor->GetActorLocation(), 50.f, 10, color, false, 0.1f, 0, 5.f);
+    for (size_t i = 0; i < points.Num() - 1; i++)
+    {
+        DrawDebugLine(GetWorld(), points[i], points[i + 1], FColor::Green, false, 0.1f, 0, 5.f);
     }
 }
 
