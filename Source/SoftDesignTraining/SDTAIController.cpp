@@ -22,17 +22,16 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     // Move to target depending on current behavior
     ShowNavigationPath();
     OnMoveToTarget();
-    MoveToLocation(TargetActor->GetActorLocation());
-    /*
-    if (Cast<const INavAgentInterface>(TargetActor) != nullptr)
+    
+    if (Cast<const INavAgentInterface>(TargetActor) != nullptr && followPlayer) //We update the path only when we see the player
     {
-        MoveToActor(TargetActor);
+        MoveToActor(TargetActor,-1.0F,false);// Directly update the path when the actor move.
     }
     else
     {
         MoveToLocation(TargetActor->GetActorLocation());
     }
-    */
+    
 }
 
 void ASDTAIController::OnMoveToTarget()
@@ -43,7 +42,7 @@ void ASDTAIController::OnMoveToTarget()
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult &Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
-
+    followPlayer = false;
     m_ReachedTarget = true;
 }
 
@@ -174,6 +173,10 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
 
     }
     else {
+        if (followPlayer) { 
+           // The player cannot be seen so we just stop the current path which is update to follow a path to the last position where the player was seen.
+           AIStateInterrupted();
+        }
         followPlayer = false;
     }
     
