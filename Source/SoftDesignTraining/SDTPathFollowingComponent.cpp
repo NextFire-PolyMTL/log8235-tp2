@@ -36,8 +36,6 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         if (FMath::Abs(angleBetweenJumpDirectionAndForwardVector) > 1.0f)
         {
             GEngine->AddOnScreenDebugMessage(INDEX_NONE, 0.0f, FColor::Blue, FString("Correcting angle"));
-            // auto newRotation = FMath::RInterpTo(owner->GetCharacter()->GetActorRotation(), jumpDirection.Rotation(), DeltaTime, 10.0f);
-            // owner->GetCharacter()->SetActorRotation(newRotation);
             owner->GetCharacter()->SetActorRotation(jumpDirection.Rotation());
         }
         else if (UseProvidedJumpCurve)
@@ -106,23 +104,25 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         // Handle starting jump
         owner->AtJumpSegment = true;
 
-        // The X axis of the curve is the time elapsed. The Y axis of the curve is the height of the jump.
-        // Retrieve the start and end time of the jump curve.
-        owner->JumpCurve->GetTimeRange(MinTimeCurve, MaxTimeCurve);
-        // Configure the time elapsed on the curve to start at the first time of the curve.
-        TimeOnCurve = MinTimeCurve;
-        // Since all the start and end points are at the same level, assume that the movement in the X,Y plane is linear during the jump.
-        // To determine the position, we will just scale this vector according to the time that passed.
-        JumpVector2D = FVector2D(segmentEnd.Location) - FVector2D(segmentStart.Location);
-
-        DrawDebugPoint(GetWorld(), segmentStart, 10.0f, FColor::Magenta, false, 3.0f);
-
         if (!UseProvidedJumpCurve)
         {
             FVector velocity;
             UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), velocity, segmentStart.Location, segmentEnd.Location);
             owner->GetCharacter()->LaunchCharacter(velocity, true, true);
         }
+        else
+        {
+            // The X axis of the curve is the time elapsed. The Y axis of the curve is the height of the jump.
+            // Retrieve the start and end time of the jump curve.
+            owner->JumpCurve->GetTimeRange(MinTimeCurve, MaxTimeCurve);
+            // Configure the time elapsed on the curve to start at the first time of the curve.
+            TimeOnCurve = MinTimeCurve;
+            // Since all the start and end points are at the same level, assume that the movement in the X,Y plane is linear during the jump.
+            // To determine the position, we will just scale this vector according to the time that passed.
+            JumpVector2D = FVector2D(segmentEnd.Location) - FVector2D(segmentStart.Location);
+        }
+
+        DrawDebugPoint(GetWorld(), segmentStart, 10.0f, FColor::Magenta, false, 3.0f);
     }
     else
     {
