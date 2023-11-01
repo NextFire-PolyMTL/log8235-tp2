@@ -40,7 +40,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
             // owner->GetCharacter()->SetActorRotation(newRotation);
             owner->GetCharacter()->SetActorRotation(jumpDirection.Rotation());
         }
-        else
+        else if (UseProvidedJumpCurve)
         {
             FVector newLocation;
             TimeOnCurve += DeltaTime * owner->JumpSpeed;
@@ -114,6 +114,13 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         JumpVector2D = FVector2D(segmentEnd.Location) - FVector2D(segmentStart.Location);
 
         DrawDebugPoint(GetWorld(), segmentStart, 10.0f, FColor::Magenta, false, 3.0f);
+
+        if (!UseProvidedJumpCurve)
+        {
+            FVector velocity;
+            UGameplayStatics::SuggestProjectileVelocity_CustomArc(GetWorld(), velocity, segmentStart.Location, segmentEnd.Location);
+            owner->GetCharacter()->LaunchCharacter(velocity, true, true);
+        }
     }
     else
     {

@@ -18,6 +18,9 @@ public:
     virtual void FollowPathSegment(float deltaTime) override;
     virtual void SetMoveSegment(int32 segmentStartIndex) override;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+    bool UseProvidedJumpCurve = false;
+
 private:
     /// During a jump segment, the time elapsed since the beginning of the jump.
     float TimeOnCurve = 0.0f;
