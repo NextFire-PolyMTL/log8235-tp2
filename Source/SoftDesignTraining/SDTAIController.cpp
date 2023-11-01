@@ -50,7 +50,7 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
     Super::OnMoveCompleted(RequestID, Result);
     if (followPlayer) {
         canSeePlayer = false;
-        //We cannot set followPlayer to false now because otherwise the agent will go to the starting point of the player
+        //We cannot set followPlayer to false now because otherwise the agent will go to the starting point of the player if he eliminate him
     }
     m_ReachedTarget = true;
 }
