@@ -11,6 +11,7 @@
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 #include "NavigationSystem.h"
+#include "SoftDesignTrainingMainCharacter.h"
 
 ASDTAIController::ASDTAIController(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
@@ -23,9 +24,14 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     ShowNavigationPath();
     OnMoveToTarget();
     
-    if (Cast<const INavAgentInterface>(TargetActor) != nullptr && followPlayer) //We update the path only when we see the player
+    if (Cast<const INavAgentInterface>(TargetActor) != nullptr && canSeePlayer) //We update the path only when we see the player
     {
         MoveToActor(TargetActor,-1.0F,false);// Directly update the path when the actor move.
+    }
+    else if (Cast<const INavAgentInterface>(TargetActor) != nullptr && followPlayer)
+    {
+        MoveToLocation(lastPlayerPosition);
+        followPlayer = false;
     }
     else
     {
@@ -42,7 +48,10 @@ void ASDTAIController::OnMoveToTarget()
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult &Result)
 {
     Super::OnMoveCompleted(RequestID, Result);
-    followPlayer = false;
+    if (followPlayer) {
+        canSeePlayer = false;
+        //We cannot set followPlayer to false now because otherwise the agent will go to the starting point of the player
+    }
     m_ReachedTarget = true;
 }
 
@@ -157,6 +166,7 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
             }
         }
         followPlayer = false;
+        canSeePlayer = false;
     }
     
     else if (component != nullptr && component->GetCollisionObjectType() == COLLISION_PLAYER) {
@@ -164,20 +174,27 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
             TargetActor = detectionHit.GetActor();
             AIStateInterrupted(); //We consider that the IA reached is previous objectives
             followPlayer = true;
+            canSeePlayer = true;
         }
+        lastPlayerPosition = TargetActor->GetActorLocation();
     }
     else if (component != nullptr && m_ReachedTarget)
     {
         TargetActor = detectionHit.GetActor();
         followPlayer = false;
+        canSeePlayer = false;
 
     }
     else {
         if (followPlayer) { 
            // The player cannot be seen so we just stop the current path which is update to follow a path to the last position where the player was seen.
            AIStateInterrupted();
+           canSeePlayer = false;
         }
-        followPlayer = false;
+        else {
+            followPlayer = false;
+            canSeePlayer = false;
+        }
     }
     
     /*

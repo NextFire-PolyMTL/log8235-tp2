@@ -45,6 +45,8 @@ public:
     bool Landing = false;
 
     bool followPlayer = false;
+    bool canSeePlayer = false;
+    FVector lastPlayerPosition=FVector(0,0,0);
 
 public:
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
