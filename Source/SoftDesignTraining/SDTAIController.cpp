@@ -207,7 +207,7 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
 
 void ASDTAIController::AIStateInterrupted()
 {
-    StopMovement();
+    GetPathFollowingComponent()->AbortMove(*this, FPathFollowingResultFlags::MovementStop | FPathFollowingResultFlags::ForcedScript, GetPathFollowingComponent()->GetCurrentRequestId(), EPathFollowingVelocityMode::Keep);
     m_ReachedTarget = true;
 }
 
