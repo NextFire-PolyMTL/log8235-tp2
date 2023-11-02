@@ -149,18 +149,7 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
     auto component = detectionHit.GetComponent();
     if (component == nullptr && m_ReachedTarget)
     {
-        auto min_dist = INFINITY;
-
-        for (TActorIterator<ASDTCollectible> collectible(GetWorld()); collectible; ++collectible)
-        {
-           // GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.0, FColor::Red, FString("go to collectible outside sphere"));
-            auto dist = FVector::Dist(GetPawn()->GetActorLocation(), collectible->GetActorLocation());
-            if (!collectible->IsOnCooldown() && dist < min_dist)
-            {
-                TargetActor = *collectible;
-                min_dist = dist;
-            }
-        }
+        TargetActor = FindClosestCollectible();
         PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
         canSeePlayer = false;
     }
@@ -197,15 +186,22 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
     }
     else
     {
-        if (PlayerBehaviorChoice == PlayerBehavior::CHASE) {
+        if (PlayerBehaviorChoice == PlayerBehavior::CHASE)
+        {
             // The player cannot be seen so we just stop the current path which is update to follow a path to the last position where the player was seen.
             AIStateInterrupted();
-            canSeePlayer = false;
         }
-        else {
-            PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
-            canSeePlayer = false;
+        else if (PlayerBehaviorChoice == PlayerBehavior::NO_PLAYER)
+        {
+            auto actorAsCollectible = Cast<ASDTCollectible>(TargetActor);
+            if (actorAsCollectible != nullptr && actorAsCollectible->IsOnCooldown())
+            {
+                AIStateInterrupted();
+                // If component is not null, we know it is not the player because of the else if condition before.
+                TargetActor = component != nullptr ? detectionHit.GetActor() : FindClosestCollectible();
+            }
         }
+        canSeePlayer = false;
     }
 }
 
@@ -235,4 +231,22 @@ AActor *ASDTAIController::ChooseFleePoint(FVector playerPosition) const
         // The multiplication by 2 is a weight to prefer a point that is far from the first plane at first.
         return 2 * playerPlane.PlaneDot(element->GetActorLocation()) + FMath::Abs(playerParallelPlane.PlaneDot(element->GetActorLocation()));
     })->Get();
+}
+
+AActor* ASDTAIController::FindClosestCollectible() const
+{
+    auto min_dist = INFINITY;
+    AActor *actor = nullptr;
+
+    for (TActorIterator<ASDTCollectible> collectible(GetWorld()); collectible; ++collectible)
+    {
+        auto dist = FVector::Dist(GetPawn()->GetActorLocation(), collectible->GetActorLocation());
+        if (!collectible->IsOnCooldown() && dist < min_dist)
+        {
+            actor = *collectible;
+            min_dist = dist;
+        }
+    }
+
+    return actor;
 }

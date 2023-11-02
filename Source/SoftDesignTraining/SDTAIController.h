@@ -81,6 +81,12 @@ private:
     /// \return AActor The flee position that goes away from the player.
     AActor *ChooseFleePoint(FVector playerPosition) const;
 
+    /// Find the closest collectible not on cooldown from the position of the actor.
+    ///
+    /// The distance calculated is just the distance between two points. It does not take into account the walls.
+    /// \return AActor The closest collectible not on cooldown, or null if there is no collectible available.
+    AActor *FindClosestCollectible() const;
+
     /// The actual behavior of the AI.
     PlayerBehavior PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
 
