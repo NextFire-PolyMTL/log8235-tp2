@@ -17,24 +17,29 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public ASDTBaseAIController
 public:
     ASDTAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    //Half lenght of the capsule corresponding to the field of vision.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleHalfLength = 500.f;
 
+    //radius of the capsule corresponding to the field of vision.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleRadius = 250.f;
 
+    //offset beyhond which is the vision field
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleForwardStartingOffset = 100.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     UCurveFloat* JumpCurve;
 
+    //Scalar which regulate the height of the jump
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float JumpApexHeight = 300.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float JumpSpeed = 1.f;
 
+    //Boolean which tells if the segment in a path is one where the agent has to jump
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool AtJumpSegment = false;
 
