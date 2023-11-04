@@ -56,11 +56,26 @@ public:
 
 protected:
     void OnMoveToTarget();
+    /// Get the detection that should be priorize among other.
+    ///
+    /// The list of actors is taken from the Pawn that owns this AController.
+    /// \param hits list of hits obtain through physical requests on the world
+    /// \param outDetectionHit [out] the hit that should be considered in priority among the other hits.
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
+
+    /// Update the agent behavior by making sweep request on the world to get a list of hit actors,
+    /// and call SetBehavior by given the prioritized hit.
+    ///
+    /// \param deltaTime.
     void UpdatePlayerInteraction(float deltaTime);
 
+    //Agent's target
     AActor* TargetActor;
 
+    /// Set the behavior of the agent regarding the FHitResult giv in parameters
+    ///
+    /// \param detectionHit hit's result.
+    /// \param deltaTime.
     void SetBehavior(float deltaTime, FHitResult detectionHit);
 
 private:
@@ -75,9 +90,20 @@ private:
         FLEE
     };
 
+
+    /// Initiate the move to the target.
+    ///
+    /// \param deltaTime.
     virtual void GoToBestTarget(float deltaTime) override;
+
+    /// Call to update the behavior.
+    ///
+    /// \param deltaTime.
     virtual void ChooseBehavior(float deltaTime) override;
+
+    /// Show the path currently teken by the agent
     virtual void ShowNavigationPath() override;
+    
 
     /// When going away from the player, the AI chooses the location corresponding to a list of actors (flee positions).
     ///
