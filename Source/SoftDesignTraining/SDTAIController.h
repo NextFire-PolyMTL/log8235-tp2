@@ -95,6 +95,8 @@ private:
     /// The actual behavior of the AI.
     PlayerBehavior PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
 
+    //Bool which say if the player is in the vision field of the agent
     bool canSeePlayer = false;
+    //Last pleyer position know by the player
     FVector lastPlayerPosition = FVector(0, 0, 0);
 };
