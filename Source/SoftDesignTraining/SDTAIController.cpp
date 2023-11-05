@@ -25,13 +25,13 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     ShowNavigationPath();
     OnMoveToTarget();
 
-    if (Cast<const INavAgentInterface>(TargetActor) != nullptr && canSeePlayer) //We update the path only when we see the player
+    if (Cast<const INavAgentInterface>(TargetActor) != nullptr && CanSeePlayer) //We update the path only when we see the player
     {
         MoveToActor(TargetActor,-1.0F,false);// Directly update the path when the actor move.
     }
     else if (Cast<const INavAgentInterface>(TargetActor) != nullptr && PlayerBehaviorChoice == PlayerBehavior::CHASE)
     {
-        MoveToLocation(lastPlayerPosition);
+        MoveToLocation(LastPlayerPosition);
         PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
     }
     else if (TargetActor != nullptr)
@@ -50,7 +50,7 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
 {
     Super::OnMoveCompleted(RequestID, Result);
     if (PlayerBehaviorChoice == PlayerBehavior::CHASE) {
-        canSeePlayer = false;
+        CanSeePlayer = false;
         //We cannot set followPlayer to false now because otherwise the agent will go to the starting point of the player if he eliminate him
     }
     m_ReachedTarget = true;
@@ -151,7 +151,7 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
     {
         TargetActor = FindClosestCollectible();
         PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
-        canSeePlayer = false;
+        CanSeePlayer = false;
     }
 
     else if (component != nullptr && component->GetCollisionObjectType() == COLLISION_PLAYER) {
@@ -160,7 +160,7 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
             TargetActor = playerPoweredUp ? ChooseFleePoint(detectionHit.GetActor()->GetActorLocation()) : detectionHit.GetActor();
             AIStateInterrupted(); //We consider that the IA reached is previous objectives
             PlayerBehaviorChoice = playerPoweredUp ? PlayerBehavior::FLEE : PlayerBehavior::CHASE;
-            canSeePlayer = true;
+            CanSeePlayer = true;
         }
         else if (PlayerBehaviorChoice == PlayerBehavior::CHASE && playerPoweredUp)
         {
@@ -173,16 +173,16 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
             TargetActor = detectionHit.GetActor();
             AIStateInterrupted();
             PlayerBehaviorChoice = PlayerBehavior::CHASE;
-            canSeePlayer = true;
+            CanSeePlayer = true;
         }
 
-        lastPlayerPosition = TargetActor != nullptr ? TargetActor->GetActorLocation() : FVector::ZeroVector;
+        LastPlayerPosition = TargetActor != nullptr ? TargetActor->GetActorLocation() : FVector::ZeroVector;
     }
     else if (component != nullptr && m_ReachedTarget)
     {
         TargetActor = detectionHit.GetActor();
         PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
-        canSeePlayer = false;
+        CanSeePlayer = false;
     }
     else
     {
@@ -201,7 +201,7 @@ void ASDTAIController::SetBehavior(float deltaTime, FHitResult detectionHit)
                 TargetActor = component != nullptr ? detectionHit.GetActor() : FindClosestCollectible();
             }
         }
-        canSeePlayer = false;
+        CanSeePlayer = false;
     }
 }
 

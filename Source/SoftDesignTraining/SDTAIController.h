@@ -17,38 +17,32 @@ class SOFTDESIGNTRAINING_API ASDTAIController : public ASDTBaseAIController
 public:
     ASDTAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    //Half lenght of the capsule corresponding to the field of vision.
+    /// Half lenght of the capsule corresponding to the field of vision.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleHalfLength = 500.f;
 
-    //radius of the capsule corresponding to the field of vision.
+    /// Radius of the capsule corresponding to the field of vision.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleRadius = 250.f;
 
-    //offset beyhond which is the vision field
+    /// Offset beyhond which is the vision field.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float m_DetectionCapsuleForwardStartingOffset = 100.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     UCurveFloat* JumpCurve;
 
-    //Scalar which regulate the height of the jump
+    /// Scalar which regulate the height of the jump.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float JumpApexHeight = 300.f;
 
+    /// Scalar that regulates the speed at which the player follows JumpCurve.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     float JumpSpeed = 1.f;
 
-    //Boolean which tells if the segment in a path is one where the agent has to jump
+    /// Boolean which tells if the segment in a path is one where the agent has to jump
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool AtJumpSegment = false;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
-    bool InAir = false;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
-    bool Landing = false;
-
 
 public:
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
@@ -70,7 +64,7 @@ protected:
     void UpdatePlayerInteraction(float deltaTime);
 
     //Agent's target
-    AActor* TargetActor;
+    AActor *TargetActor;
 
     /// Set the behavior of the agent regarding the FHitResult giv in parameters
     ///
@@ -121,8 +115,8 @@ private:
     /// The actual behavior of the AI.
     PlayerBehavior PlayerBehaviorChoice = PlayerBehavior::NO_PLAYER;
 
-    //Bool which say if the player is in the vision field of the agent
-    bool canSeePlayer = false;
-    //Last pleyer position know by the player
-    FVector lastPlayerPosition = FVector(0, 0, 0);
+    /// Bool which say if the player is in the vision field of the agent
+    bool CanSeePlayer = false;
+    /// Last player position known by the player
+    FVector LastPlayerPosition = FVector::ZeroVector;
 };
