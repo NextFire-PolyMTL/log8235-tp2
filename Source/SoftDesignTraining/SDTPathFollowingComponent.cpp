@@ -54,7 +54,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
                 // This assumes that the starting and ending point are at the same Z coordinate.
                 // The detection of the character back on the floor is not properly detected and it prevents to move to the next segment. Add a small shift in the Z coordinate to help
                 // the detection of the floor.
-                newLocation = segmentStart.Location + FVector(JumpVector2D * (TimeOnCurve - MinTimeCurve) / (MaxTimeCurve - MinTimeCurve), owner->GetCharacter()->GetSimpleCollisionHalfHeight() - 5.0f);
+                newLocation = segmentStart.Location + FVector(JumpVector2D * (TimeOnCurve - MinTimeCurve) / (MaxTimeCurve - MinTimeCurve), owner->GetCharacter()->GetSimpleCollisionHalfHeight() - 20.0f * ((TimeOnCurve - MaxTimeCurve) / 0.2f));
             }
             else
             {
